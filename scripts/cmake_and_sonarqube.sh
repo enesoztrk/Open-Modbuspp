@@ -9,7 +9,7 @@ cd $TRAVIS_BUILD_DIR/Modbuspp
 mkdir build
 cd build
 cmake -S ../Modbuspp/ -B . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE:String=Debug \
--DCMAKE_C_COMPILER:STRING=/usr/bin/gcc -DCMAKE_CXX_COMPILER:STRING=/usr/bin/g++
+-DCMAKE_C_COMPILER:STRING=/usr/bin/gcc -DCMAKE_CXX_COMPILER:STRING=/usr/bin/g++ ..
 cd ..
 
 cmake --build build/ --target clean
