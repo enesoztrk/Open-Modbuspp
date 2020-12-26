@@ -5,8 +5,7 @@ Modbus C++ Library
 ## Development Tools 
 
 - Cmake
-- CppCheck
-- Travis or Jenkins
+- Travis
 - Star UML
 - Gtest
 - Uncrustify
