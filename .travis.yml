@@ -1,7 +1,10 @@
 language: cpp
 compiler: gcc
 
-
+# safelist
+branches:
+  only:
+  - main
 
 addons:
   sonarcloud:
