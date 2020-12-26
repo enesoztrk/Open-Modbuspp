@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.7 FATAL_ERROR)
 
 project(Modbuspp LANGUAGES CXX)
 
@@ -9,6 +9,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 ######## Sub-projects ##############
 
 if (CMAKE_PLATFORM STREQUAL "UNIT-TEST")
+enable_testing()
 add_subdirectory(Modbuspp)
 add_subdirectory(UnitTests)
 else()

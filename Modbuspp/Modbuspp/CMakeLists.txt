@@ -51,7 +51,7 @@ set(ALL_FILES
      ${Headers__Comm_Layer}
  )
 
-add_executable(${PROJECT_NAME} ${ALL_FILES})
+
 message(STATUS "Generating project is done!")
 
 set(TARGET_BINARY ${PROJECT_NAME})
@@ -59,17 +59,27 @@ set(TARGET_BINARY ${PROJECT_NAME})
 
 
 #Custom target for build and debug with GDB
-add_custom_target(build_and_debug ALL DEPENDS ${TARGET_BINARY})
-add_custom_command(TARGET build_and_debug POST_BUILD
-    COMMAND echo "Hello World1"
+#add_custom_target(build_and_debug ALL DEPENDS ${TARGET_BINARY})
+#add_custom_command(TARGET build_and_debug POST_BUILD
+#    COMMAND echo "Hello World1"
 
+#)
+if (CMAKE_PLATFORM STREQUAL "UNIT-TEST")
+# Declare the library
+add_library(${PROJECT_NAME} STATIC
+    ${ALL_FILES}
 )
+else()
+add_executable(${PROJECT_NAME} ${ALL_FILES})
+endif()
 
 
 #Output Directory
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_DIRECTORY_DEBUG   "${CMAKE_CURRENT_SOURCE_DIR}/lib/"
-    OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 )
 
 ################################################################################
