@@ -12,4 +12,4 @@ addons:
 
 
 script:
-      - $TRAVIS_PROJECT_DIR/scripts/cmake_and_sonarqube.sh
+      - $TRAVIS_BUILD_DIR/scripts/cmake_and_sonarqube.sh

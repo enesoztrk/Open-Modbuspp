@@ -11,4 +11,4 @@ $CMAKE_PATH  --build $CMAKE_CACHE_PATH --target clean
 
 build-wrapper-linux-x86-64 --out-dir $(pwd)/bw_output  $CMAKE_PATH  --build $CMAKE_CACHE_PATH --target Modbuspp
 
-sonar-scanner -Dproject.settings=$TRAVIS_PROJECT_DIRls/sonar-project.properties
+sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties
