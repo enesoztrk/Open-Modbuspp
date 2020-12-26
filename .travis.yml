@@ -1,0 +1,15 @@
+language: cpp
+compiler: gcc
+
+
+
+addons:
+  sonarcloud:
+    organization: "enesoztrk"
+    token:
+      secure: $TRAVIS_SECURE_KEY # encrypted value of your token
+
+
+
+script:
+      - $TRAVIS_PROJECT_DIR/scripts/cmake_and_sonarqube.sh
