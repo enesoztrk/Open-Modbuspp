@@ -6,8 +6,7 @@ compiler: gcc
 addons:
   sonarcloud:
     organization: "enesoztrk"
-    token:
-      secure: $TRAVIS_SECURE_KEY # encrypted value of your token
+    token: $SONAR_TOKEN
 
 
 
