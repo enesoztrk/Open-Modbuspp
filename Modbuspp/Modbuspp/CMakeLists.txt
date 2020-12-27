@@ -27,6 +27,7 @@ set(Headers__Config_Layer
 )
 set(Headers__TCPManagement_Layer
     "inc/tcp.h"
+    "inc/tcpstack.h"
 )
 set(Headers__Comm_Layer
     "inc/comm.h"
@@ -39,6 +40,18 @@ source_group("inc/CommLayer" FILES ${Headers__Comm_Layer})
 
 
 
+########Port Includes#####################
+set(Headers__Port_Layer
+)
+
+if (CMAKE_PLATFORM STREQUAL "POSIX")
+
+    list(APPEND Headers__Port_Layer "port/posix/tcpstackposix.h")
+
+endif()
+
+source_group("port/inc" FILES ${Headers__Port_Layer})
+
 
 ########All Files#############
 set(ALL_FILES
@@ -49,6 +62,7 @@ set(ALL_FILES
      ${Headers__Config_Layer}
      ${Headers__TCPManagement_Layer}
      ${Headers__Comm_Layer}
+     ${Headers__Port_Layer}
  )
 
 
