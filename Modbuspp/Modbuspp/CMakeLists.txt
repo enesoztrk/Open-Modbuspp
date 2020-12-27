@@ -78,7 +78,7 @@ set(TARGET_BINARY ${PROJECT_NAME})
 #    COMMAND echo "Hello World1"
 
 #)
-if (CMAKE_PLATFORM STREQUAL "UNIT-TEST")
+if (PROJECT_TYPE STREQUAL "UNIT-TEST")
 # Declare the library
 add_library(${PROJECT_NAME} STATIC
     ${ALL_FILES}
