@@ -40,6 +40,8 @@ Thumbs.db
 **/bin
 **/lib
 **/build*
+*.gcov
+*scannerwork
 
 # xemacs temporary files
 *.flc

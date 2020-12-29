@@ -42,7 +42,6 @@ include_directories("${source_dir}/googletest/include"
 file(GLOB SRCS *.cpp)
 
 ADD_EXECUTABLE(UnitTest ${SRCS})
-
 # Link with other targets.
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC
                     ${CMAKE_SOURCE_DIR}/Modbuspp/lib/libModbuspp.a
@@ -56,5 +55,31 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC
                     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
             )
 
-add_test(NAME UnitTest
-COMMAND UnitTest)
+
+set(COVERAGE_EXCLUDES "./UnitTests/gtest/**")
+INCLUDE( ${CMAKE_SOURCE_DIR}/cmake-module/CodeCoverage.cmake )
+
+  append_coverage_compiler_flags()
+  add_test(NAME UnitTest
+  COMMAND UnitTest)
+  message("Coverage is going to be generated")
+  #set(COVERAGE_EXCLUDES
+  #          'test/*'
+  #          'extern/*'
+  #          )
+  #set(COVERAGE_LCOV_EXCLUDES
+  #"/usr/include/*"
+  #"/usr/include/c++/*"
+  #"/usr/include/x86_64-linux-gnu/c++/7/bits/*"
+  #)
+  # SETUP_TARGET_FOR_COVERAGE_LCOV(NAME coverage
+  #                          EXECUTABLE ${TEST_EXE_NAME}
+  #                          )
+#  setup_target_for_coverage_gcovr_xml(NAME coverage
+#                                      EXECUTABLE UnitTest
+#                                      EXCLUDE "**/c++/**" "gtest/*"
+#                                      )
+
+
+
+

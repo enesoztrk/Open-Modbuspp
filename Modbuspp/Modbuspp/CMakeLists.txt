@@ -70,7 +70,9 @@ message(STATUS "Generating project is done!")
 
 set(TARGET_BINARY ${PROJECT_NAME})
 
+INCLUDE( ${CMAKE_SOURCE_DIR}/cmake-module/CodeCoverage.cmake )
 
+  append_coverage_compiler_flags()
 
 #Custom target for build and debug with GDB
 #add_custom_target(build_and_debug ALL DEPENDS ${TARGET_BINARY})

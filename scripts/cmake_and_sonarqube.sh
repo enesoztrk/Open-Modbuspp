@@ -8,15 +8,26 @@ set -e
 cd $TRAVIS_BUILD_DIR/Modbuspp
 mkdir build
 cd build
-cmake -S ../Modbuspp/ -B .  -DCMAKE_BUILD_TYPE:String=Debug \
--DCMAKE_PLATFORM:String=POSIX -DPROJECT_TYPE:String=UNIT-TEST -DCMAKE_C_COMPILER:STRING=/usr/bin/gcc -DCMAKE_CXX_COMPILER:STRING=/usr/bin/g++ ..
-cd ..
+cmake   -DCMAKE_BUILD_TYPE:String=Debug \
+-DCMAKE_PLATFORM:String=POSIX -DPROJECT_TYPE:String=UNIT-TEST  ..
 
 
 NUMBER_OF_PROCESSORS=$(nproc --all)
 
-cmake --build build/ --target clean
 
-build-wrapper-linux-x86-64 --out-dir bw_output  cmake  --build build/ --target all
 
-sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties  -Dsonar.cfamily.threads=${NUMBER_OF_PROCESSORS}
+build-wrapper-linux-x86-64 --out-dir bw_output  make clean all
+make 
+
+$TRAVIS_BUILD_DIR/Modbuspp/UnitTests/bin/UnitTest
+echo 'Gcov process started...'
+mkdir gcov-coverage
+
+for x in $TRAVIS_BUILD_DIR/Modbuspp/build/Modbuspp/CMakeFiles/Modbuspp.dir/src/*.cpp.o; do
+  echo "x: $x"
+  gcov "$x"
+done
+
+cd ..
+sonar-scanner -Dproject.settings=$TRAVIS_BUILD_DIR/sonar-project.properties  -Dsonar.cfamily.threads=${NUMBER_OF_PROCESSORS} \
+-Dsonar.cfamily.gcov.reportsPath="$TRAVIS_BUILD_DIR/Modbuspp/build"
