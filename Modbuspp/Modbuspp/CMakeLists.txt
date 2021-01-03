@@ -105,5 +105,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/inc"
 )
 
-message(STATUS "a: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "Cmake Current Source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 

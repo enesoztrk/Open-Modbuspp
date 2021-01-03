@@ -5,13 +5,18 @@ compiler: gcc
 branches:
   only:
   - main
+  - develop
 
 addons:
   sonarcloud:
     organization: "enesoztrk"
     token: $SONAR_TOKEN
 
-
+before_script:
+      - echo "Before script"          
 
 script:
       - $TRAVIS_BUILD_DIR/scripts/cmake_and_sonarqube.sh
+
+after_success:
+     - echo "after success" 
