@@ -26,8 +26,7 @@ set(Headers__Config_Layer
     "inc/config.h"
 )
 set(Headers__TCPManagement_Layer
-    "inc/tcp.h"
-    "inc/tcpstack.h"
+    "inc/tcpip_interface.h"
 )
 set(Headers__Comm_Layer
     "inc/comm.h"
@@ -42,11 +41,12 @@ source_group("inc/CommLayer" FILES ${Headers__Comm_Layer})
 
 ########Port Includes#####################
 set(Headers__Port_Layer
+    "port/tcpip_abstraction.h"
 )
 
 if (CMAKE_PLATFORM STREQUAL "POSIX")
 
-    list(APPEND Headers__Port_Layer "port/posix/tcpstackposix.h")
+    list(APPEND Headers__Port_Layer "port/posix/tcpip_posix.h")
 
 endif()
 
@@ -80,7 +80,7 @@ INCLUDE( ${CMAKE_SOURCE_DIR}/cmake-module/CodeCoverage.cmake )
 #    COMMAND echo "Hello World1"
 
 #)
-if (PROJECT_TYPE STREQUAL "UNIT-TEST")
+if (STATIC_LIB STREQUAL "ON")
 # Declare the library
 add_library(${PROJECT_NAME} STATIC
     ${ALL_FILES}
@@ -101,8 +101,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 ################################################################################
 # Include directories
 ################################################################################
-target_include_directories(${PROJECT_NAME} PUBLIC
+include_directories(${PROJECT_NAME} PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/inc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/port"
+     "${CMAKE_CURRENT_SOURCE_DIR}/port/posix"
 )
 
 message(STATUS "Cmake Current Source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
