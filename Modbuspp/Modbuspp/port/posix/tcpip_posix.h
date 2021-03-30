@@ -32,11 +32,11 @@ extern "C" {
 #include <netinet/in.h>
 #include <stdint.h>
 #include <arpa/inet.h>
-
+#include <errno.h>
 }
 
 namespace mb{
-
+using sock_fd=int;
 using sock_addr=struct sockaddr_in;
 using ip_t=unsigned long;
 using port_t=unsigned short;
@@ -83,7 +83,7 @@ public:
      * @note
      * @warning Warning.
      */
-    ITcpIp(ip_t ip,port_t port){
+    ITcpIp(ip_t ip,port_t port):addr{}{
        init_socket(ip,port);
     }
 
@@ -97,7 +97,7 @@ public:
      * @note
      * @warning Warning.
      */
-    ITcpIp(std::string ip_str,port_t port){
+    ITcpIp(std::string ip_str,port_t port):addr{}{
 
         std::cout<<__PRETTY_FUNCTION__<<"\n";
         struct in_addr addr_temp{};
@@ -128,12 +128,16 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]int get_socket_fd() override{
+    [[nodiscard]]sock_fd get_fd() override{
         sock_desc = ::socket(AF_INET , SOCK_STREAM , 0);
-        if(sock_desc!=-1)
-            tcpip_stat=status::TCPIP_SOCKFD_ERR;
+        if(sock_desc==-1){
+            tcpip_diag.stat=diag::status::TCPIP_SOCKFD_ERR;
+            tcpip_diag.err=errno;
+        }
         else
-            tcpip_stat=status::TCPIP_SOCKFD_INIT;
+            tcpip_diag.stat=diag::status::TCPIP_SOCKFD_INIT;
+
+
         return sock_desc;
     }
     /**
@@ -193,10 +197,25 @@ public:
      */
     [[nodiscard]]bool bind()override{
         std::cout<<__PRETTY_FUNCTION__<<"\n";
-        if(::bind(sock_desc, (struct sockaddr *)&addr, sizeof(addr))<0)
-            return false;
+        bool ret_val=false;
+
+
+
+        set_sockopt(SOL_SOCKET,SO_REUSEADDR);
+
+
+        if(0==(::bind(sock_desc, (struct sockaddr *)&addr, sizeof(addr)))){
+               tcpip_diag.stat=diag::status::TCPIP_BIND_SUCCESS;
+               ret_val=true;
+        }
         else
-            return true;
+        {     tcpip_diag.stat=diag::status::TCPIP_BIND_ERR;
+              tcpip_diag.err=errno;
+
+        }
+
+
+            return ret_val;
 
     }
 
@@ -210,8 +229,23 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]bool listen()override{
+    [[nodiscard]]bool listen(const unsigned int max_conn)override{
         std::cout<<__PRETTY_FUNCTION__<<"\n";
+
+        bool ret_val=false;
+
+        if(0==(::listen(sock_desc,max_conn))){
+               tcpip_diag.stat=diag::status::TCPIP_LISTEN_SUCCESS;
+               ret_val=true;
+        }
+        else
+        {     tcpip_diag.stat=diag::status::TCPIP_LISTEN_ERR;
+              tcpip_diag.err=errno;
+
+        }
+
+
+        return ret_val;
     }
 
     /**
@@ -223,9 +257,22 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]bool accept()override{
+    [[nodiscard]]sock_fd accept()override{
+
+        auto sock_size= static_cast<socklen_t>(sizeof(struct sockaddr_in));
+        struct sockaddr_in client_sock{};
+        sock_fd client_fd{-1};
+
+        client_fd = ::accept(sock_desc,
+                           (struct sockaddr*) &client_sock, &sock_size);
+
+        if(client_fd==-1)
+        {
+           // TODO: tcpip_diag.stat=diag::status::TCPIP_
+                tcpip_diag.err=errno;
+        }
         std::cout<<__PRETTY_FUNCTION__<<"\n";
-       // std::cout<<"ip: "<<ip<<" port: "<<port<<"\n";
+        return client_fd;
     }
 
 
@@ -240,6 +287,8 @@ public:
      */
     [[nodiscard]]bool close()override{
         std::cout<<__PRETTY_FUNCTION__<<"\n";
+        ::close(sock_desc);
+        return true;
     }
 
 
@@ -280,23 +329,57 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]status getstatus()const{
+    [[nodiscard]]diag::status getstatus()const{
 
-            return tcpip_stat;
+            return tcpip_diag.stat;
     }
+
+    /**
+     * @brief
+     *
+     *
+     * @param none
+     * @return
+     * @note
+     * @warning Warning.
+     */
+    diag get_status_err()const override{return this->tcpip_diag;}
 private:
     void init_socket(ip_t ip,port_t port){
+
         addr.sin_port=htons(port);
         addr.sin_family = AF_INET;
-        tcpip_stat=status::TCPIP_INIT;
+        tcpip_diag.stat=diag::status::TCPIP_INIT;
         addr.sin_addr.s_addr=ip;
 
     }
-    int sock_desc{-1};
-    sock_addr addr{0};
+
+    void set_stat_err(diag::status stat,int err);
+
+    void set_sockopt(int level,int optnum)override{
+        auto optval = 1;
+
+        if(0==(::setsockopt(sock_desc, level, optnum, &optval, sizeof(optval)))){
+               tcpip_diag.stat=diag::status::TCPIP_SETSOCK_SUCCESS;
+
+        }
+        else
+        {     tcpip_diag.stat=diag::status::TCPIP_SETSOCK_ERR;
+              tcpip_diag.err=errno;
+
+        }
+
+
+
+
+
+
+    }
+    sock_fd sock_desc{-1};
+    sock_addr addr={};
     //TODO: ip_t getip()const will be converted template function
     std::string ip_str{""};
-    status tcpip_stat{status::TCPIP_DEINIT};
+    diag tcpip_diag;
 };
 
 }

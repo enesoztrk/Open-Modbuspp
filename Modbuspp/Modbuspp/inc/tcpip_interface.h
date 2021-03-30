@@ -16,8 +16,16 @@
 
 
 #define TCPIP_POSIX
-#ifdef TCPIP_POSIX
+#if defined(TCPIP_POSIX)
+#warning "POSIX is selected as TCP/IP Stack"
 #include "../port/posix/tcpip_posix.h"
+
+#elif defined(TCPIP_WINDOWS)
+#warning "WINSOCK is selected as TCP/IP Stack"
+#elif defined(TCPIP_LWIP)
+#warning "LWIP is selected as TCP/IP Stack"
+#else
+#error "Please select TCP/IP Stack"
 #endif
 
 
