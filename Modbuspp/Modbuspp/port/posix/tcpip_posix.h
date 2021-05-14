@@ -47,7 +47,7 @@ extern "C" {
 
 #else
 
-#include "../../UnitTests/mock/posix_socket_mock.h"
+#include "../../UnitTests/mock/posix_socket_mock.hpp"
 #endif
 
 

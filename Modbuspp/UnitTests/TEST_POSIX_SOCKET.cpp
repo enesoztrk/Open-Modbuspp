@@ -2,9 +2,14 @@
 
 #include "tcpip_posix.h"
 #include "tcpip_interface.h"
-
-
+#include "posix_socket_mock.hpp"
+#include "gmock/gmock.h"
+#include "mock_socket_class.h"
+using namespace testing;
 TEST(Socket, ITcpIpctor) {
+    testing::Mock::AllowLeak(static_cast<const void *>(&mock_obj_g));
+
+    EXPECT_CALL(mock_obj_g,mock_socket(AF_INET , SOCK_STREAM , 0)).Times(1).WillOnce(Return(0));
 
     TcpIPStack tcp(1,8888);
     ITcpIp& tcp_ref=tcp;

@@ -27,27 +27,15 @@ extern "C" {
 #include <signal.h>
 #include <sys/poll.h>
 }
-inline int socket (int __domain, int __type, int __protocol){
-    std::cout<<"mock socket init\n";
-    return 10;
-
-}
 
 
-inline int inet_aton (const char *__cp, struct in_addr *__inp){
-    std::cout<<"mock inet_aton\n";
-    return 1;
-}
 
-inline int fcntl (int __fd, int __cmd, ...){
-     std::cout<<"mock fcntl\n";
-    return 0;
-}
 
-inline int close (int __fd){
-     std::cout<<"mock close\n";
-    return 0;
-}
+
+int socket (int __domain, int __type, int __protocol)__THROW;
+int inet_aton (const char *__cp, struct in_addr *__inp)__THROW;
+int fcntl (int __fd, int __cmd, ...);
+int close (int __fd);
 
 inline in_addr_t inet_addr (const char *__cp) {
 

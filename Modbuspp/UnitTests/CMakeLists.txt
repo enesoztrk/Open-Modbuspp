@@ -1,10 +1,10 @@
-project(UnitTest CXX)
+project(UnitTest C CXX)
 find_package(Threads REQUIRED)
 
 if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/gtest" AND IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/gtest")
     message(STATUS "Gtest available at : ${CMAKE_CURRENT_BINARY_DIR}/gtest")
     set(binary_dir  "${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest-build")
-     set(source_dir  "${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest")
+    set(source_dir  "${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest")
 else()
     # Enable ExternalProject CMake module
     include(ExternalProject)
@@ -45,28 +45,33 @@ else()
 
 endif()
 
-# I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
-include_directories("${source_dir}/googletest/include"
-                    "${source_dir}/googlemock/include")
+
 
  #target_link_libraries(${PROJECT_NAME} PUBLIC rt)
  include_directories("${CMAKE_SOURCE_DIR}/Modbuspp/port/posix")
  include_directories("${CMAKE_SOURCE_DIR}/Modbuspp/inc")
-
+ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/mock")
+ # I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
+ include_directories("${source_dir}/googletest/include"
+                     "${source_dir}/googlemock/include")
  set(Headers__Mock
- "${CMAKE_CURRENT_SOURCE_DIR}/mock/posix_socket_mock.h"
+ "${CMAKE_CURRENT_SOURCE_DIR}/mock/posix_socket_mock.hpp"
+ "${CMAKE_CURRENT_SOURCE_DIR}/mock/mock_socket_class.h"
  )
-
+set(Sources__Mock
+"${CMAKE_CURRENT_SOURCE_DIR}/mock/posix_socket_mock.cpp"
+)
 
 
 
  source_group("Mock" FILES ${Headers__Mock})
+ source_group("Mock" FILES ${Sources__Mock})
 
 
 
 file(GLOB SRCS *.cpp)
 
-ADD_EXECUTABLE(UnitTest ${SRCS} ${Headers__Mock})
+ADD_EXECUTABLE(${PROJECT_NAME}  ${Headers__Mock} ${SRCS} ${Sources__Mock})
 add_dependencies(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/Modbuspp/lib/libModbuspp.a)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC
                     ${CMAKE_SOURCE_DIR}/Modbuspp/lib/libModbuspp.a

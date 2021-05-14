@@ -1,5 +1,5 @@
 
-project(Modbuspp LANGUAGES CXX)
+project(Modbuspp LANGUAGES C CXX)
 
 
 ########Source Files#############
