@@ -41,16 +41,21 @@ source_group("inc/CommLayer" FILES ${Headers__Comm_Layer})
 
 ########Port Includes#####################
 set(Headers__Port_Layer
-    "port/tcpip_abstraction.h"
+"port/posix/tcpip_posix.h"
+)
+
+set(Sources__Port_Layer
+ "port/posix/tcpip_posix.cpp"
 )
 
 if (CMAKE_PLATFORM STREQUAL "POSIX")
 
-    list(APPEND Headers__Port_Layer "port/posix/tcpip_posix.h")
-
+    #list(APPEND Headers__Port_Layer "port/posix/tcpip_posix.h")
+    #list(APPEND Sources__Port_Layer "port/posix/tcpip_posix.cpp")
 endif()
 
 source_group("port/inc" FILES ${Headers__Port_Layer})
+source_group("port/src" FILES ${Sources__Port_Layer})
 
 
 ########All Files#############
@@ -58,6 +63,7 @@ set(ALL_FILES
      ${Sources__Comm_Layer}
      ${Sources__Configuration_Layer}
      ${Sources__TCPManagement_Layer}
+     ${Sources__Port_Layer}
      ${Sources}
      ${Headers__Config_Layer}
      ${Headers__TCPManagement_Layer}
@@ -65,7 +71,8 @@ set(ALL_FILES
      ${Headers__Port_Layer}
  )
 
-
+include_directories("${CMAKE_SOURCE_DIR}/Modbuspp/port/posix")
+include_directories("${CMAKE_SOURCE_DIR}/Modbuspp/inc")
 message(STATUS "Generating project is done!")
 
 set(TARGET_BINARY ${PROJECT_NAME})

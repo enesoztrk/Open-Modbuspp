@@ -21,10 +21,15 @@
 #ifndef __TCPIP_POSIX_H__
 #define __TCPIP_POSIX_H__
 
-#include "../../port/tcpip_abstraction.h"
+
+
 #include <iostream>
 #include <string>
+#include <vector>
+#include<cstdint>
+#include <queue>
 
+#ifndef MOCK_SUPPORT
 extern "C" {
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -33,23 +38,39 @@ extern "C" {
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/poll.h>
 }
 
-namespace mb{
+
+
+#else
+
+#include "../../UnitTests/mock/posix_socket_mock.h"
+#endif
+
+
+
+
+#include "tcpip_interface.h"
+
+namespace port{
 using sock_fd=int;
 using sock_addr=struct sockaddr_in;
-using ip_t=unsigned long;
-using port_t=unsigned short;
+
 
 //Abstract Factory
 /*
  * See https://refactoring.guru/design-patterns/abstract-factory
+ * Convention Rules -> https://google.github.io/styleguide/cppguide.html
+ * https://r4nd0m6uy.ch/event-driven-programming-with-the-reactor-pattern.html
 */
-class ITcpIp: public AbsTcpipmngmt{
+class LinuxTcpIPStack: public ITcpIp{
 
 public:
 
-    ITcpIp()=default;
+    LinuxTcpIPStack()=delete;
 
     /**
      * @brief
@@ -60,19 +81,7 @@ public:
      * @note
      * @warning Warning.
      */
-    ~ITcpIp(){
-
-        if(this->close())
-        {
-             sock_desc=-1;
-             addr={};
-             ip_str="";
-        }
-        else{
-            //exception
-        }
-
-    }
+    ~LinuxTcpIPStack();
 
     /**
      * @brief
@@ -83,9 +92,7 @@ public:
      * @note
      * @warning Warning.
      */
-    ITcpIp(ip_t ip,port_t port):addr{}{
-       init_socket(ip,port);
-    }
+    LinuxTcpIPStack(ip_t ip,port_t port);
 
 
     /**
@@ -97,49 +104,19 @@ public:
      * @note
      * @warning Warning.
      */
-    ITcpIp(std::string ip_str,port_t port):addr{}{
+     LinuxTcpIPStack(std::string ip_str,port_t port);
 
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-        struct in_addr addr_temp{};
-        auto ret_val = ::inet_aton(ip_str.c_str(),&addr_temp);
-
-
-        if(0==ret_val){
-            //exception throw
-            }
-        else if(1==ret_val){
-            init_socket(addr_temp.s_addr,port);
-
-        }
-
-    }
-
-    //copy ctor deleted
-    ITcpIp(const ITcpIp&)=delete;
-    //copy assignment is deleted
-    ITcpIp& operator=(const ITcpIp &other)=delete;
-
-    /**
-     * @brief  it creates socket instance.
-     *
-     *
-     * @param none
-     * @return int
-     * @note
-     * @warning Warning.
-     */
-    [[nodiscard]]sock_fd get_fd() override{
-        sock_desc = ::socket(AF_INET , SOCK_STREAM , 0);
-        if(sock_desc==-1){
-            tcpip_diag.stat=diag::status::TCPIP_SOCKFD_ERR;
-            tcpip_diag.err=errno;
-        }
-        else
-            tcpip_diag.stat=diag::status::TCPIP_SOCKFD_INIT;
+    // Class is moveable
+    LinuxTcpIPStack(LinuxTcpIPStack&& other)               noexcept;
+    LinuxTcpIPStack& operator=(LinuxTcpIPStack&& other)    noexcept;
 
 
-        return sock_desc;
-    }
+    //Class is not copyable
+    LinuxTcpIPStack(const LinuxTcpIPStack&)=delete;
+    LinuxTcpIPStack& operator=(const LinuxTcpIPStack &other)=delete;
+
+
+private:
     /**
      * @brief
      *
@@ -149,28 +126,10 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]bool connect()override{
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-
-        if(sock_desc<0)
-            return false;
-        else
-            return true;
+    sock_fd vget_fd() override;
 
 
-    }
-    /**
-     * @brief
-     *
-     *
-     * @param none
-     * @return
-     * @note
-     * @warning Warning.
-     */
-    [[nodiscard]] bool send()override{
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-    }
+
 
 
     /**
@@ -182,9 +141,29 @@ public:
      * @note
      * @warning Warning.
      */
-     [[nodiscard]]bool receive()override{
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-    }
+
+    bool vis_cnxn_on()const override;
+    /**
+     * @brief
+     *
+     *
+     * @param none
+     * @return
+     * @note
+     * @warning Warning.
+     */
+    bool vconnect(std::string ip_str,port_t port)override;
+
+    /**
+     * @brief operator<< calls send function
+     *
+     *
+     * @param none
+     * @return
+     * @note
+     * @warning Warning.
+     */
+     LinuxTcpIPStack& operator<<(const std::vector<int8_t>& data_vec);
 
     /**
      * @brief
@@ -195,30 +174,20 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]bool bind()override{
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-        bool ret_val=false;
+
+    uint32_t vsend(std::vector<int8_t>&)override;
 
 
-
-        set_sockopt(SOL_SOCKET,SO_REUSEADDR);
-
-
-        if(0==(::bind(sock_desc, (struct sockaddr *)&addr, sizeof(addr)))){
-               tcpip_diag.stat=diag::status::TCPIP_BIND_SUCCESS;
-               ret_val=true;
-        }
-        else
-        {     tcpip_diag.stat=diag::status::TCPIP_BIND_ERR;
-              tcpip_diag.err=errno;
-
-        }
-
-
-            return ret_val;
-
-    }
-
+     /**
+      * @brief operator>> calls receive function
+      *
+      *
+      * @param none
+      * @return
+      * @note
+      * @warning Warning.
+      */
+      bool operator>>(std::vector<int8_t>& data_vec);
 
     /**
      * @brief
@@ -229,25 +198,7 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]bool listen(const unsigned int max_conn)override{
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-
-        bool ret_val=false;
-
-        if(0==(::listen(sock_desc,max_conn))){
-               tcpip_diag.stat=diag::status::TCPIP_LISTEN_SUCCESS;
-               ret_val=true;
-        }
-        else
-        {     tcpip_diag.stat=diag::status::TCPIP_LISTEN_ERR;
-              tcpip_diag.err=errno;
-
-        }
-
-
-        return ret_val;
-    }
-
+     bool vreceive()override;
     /**
      * @brief
      *
@@ -257,23 +208,7 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]sock_fd accept()override{
-
-        auto sock_size= static_cast<socklen_t>(sizeof(struct sockaddr_in));
-        struct sockaddr_in client_sock{};
-        sock_fd client_fd{-1};
-
-        client_fd = ::accept(sock_desc,
-                           (struct sockaddr*) &client_sock, &sock_size);
-
-        if(client_fd==-1)
-        {
-           // TODO: tcpip_diag.stat=diag::status::TCPIP_
-                tcpip_diag.err=errno;
-        }
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-        return client_fd;
-    }
+     bool vbind()override;
 
 
     /**
@@ -285,11 +220,18 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]bool close()override{
-        std::cout<<__PRETTY_FUNCTION__<<"\n";
-        ::close(sock_desc);
-        return true;
-    }
+    bool vlisten(const unsigned int max_conn)override;
+
+    /**
+     * @brief
+     *
+     *
+     * @param none
+     * @return
+     * @note
+     * @warning Warning.
+     */
+    sock_fd vaccept()override;
 
 
     /**
@@ -301,10 +243,8 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]ip_t getip()const{
+    bool vclose()override;
 
-            return  addr.sin_addr.s_addr;
-    }
 
     /**
      * @brief
@@ -315,10 +255,17 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]port_t getport()const{
-
-            return  addr.sin_port;
-    }
+    ip_t vgetip()const override;
+    /**
+     * @brief
+     *
+     *
+     * @param none
+     * @return
+     * @note
+     * @warning Warning.
+     */
+   port_t vgetport()const override;
 
     /**
      * @brief
@@ -329,58 +276,49 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]]diag::status getstatus()const{
+    status vgetstatus()const{
 
             return tcpip_diag.stat;
     }
 
-    /**
-     * @brief
-     *
-     *
-     * @param none
-     * @return
-     * @note
-     * @warning Warning.
-     */
-    diag get_status_err()const override{return this->tcpip_diag;}
-private:
-    void init_socket(ip_t ip,port_t port){
+    diag vget_status_err()const override;
 
-        addr.sin_port=htons(port);
-        addr.sin_family = AF_INET;
-        tcpip_diag.stat=diag::status::TCPIP_INIT;
-        addr.sin_addr.s_addr=ip;
+    void init_socket(ip_t ip,port_t port);
 
-    }
+    void set_stat_err(status stat,int err);
 
-    void set_stat_err(diag::status stat,int err);
+    void set_sockopt(int level,int optnum)override;
 
-    void set_sockopt(int level,int optnum)override{
-        auto optval = 1;
+   //Variables
 
-        if(0==(::setsockopt(sock_desc, level, optnum, &optval, sizeof(optval)))){
-               tcpip_diag.stat=diag::status::TCPIP_SETSOCK_SUCCESS;
-
-        }
-        else
-        {     tcpip_diag.stat=diag::status::TCPIP_SETSOCK_ERR;
-              tcpip_diag.err=errno;
-
-        }
-
-
-
-
-
-
-    }
     sock_fd sock_desc{-1};
     sock_addr addr={};
     //TODO: ip_t getip()const will be converted template function
     std::string ip_str{""};
     diag tcpip_diag;
+    bool b_is_connection_on{false};
+    using data_packet= std::vector<uint8_t>;
+
+
+    //queues will be created for incoming and outgoing packets
+    std::queue<data_packet> m_in_data{};
+    std::queue<data_packet> m_out_data{};
+
+
 };
 
-}
+
+
+
+
+
+
+
+}//Port namespacet
+
+
+
+
+
+
 #endif//__TCPIP_POSIX_H__

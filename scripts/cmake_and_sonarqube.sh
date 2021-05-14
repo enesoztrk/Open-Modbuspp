@@ -9,7 +9,7 @@ cd $TRAVIS_BUILD_DIR/Modbuspp
 mkdir build
 cd build
 cmake   -DCMAKE_BUILD_TYPE:String=Debug \
--DCMAKE_PLATFORM:String=POSIX -DPROJECT_TYPE:String=UNIT-TEST  ..
+-DCMAKE_PLATFORM:String=POSIX -DPROJECT_TYPE:String=UNIT-TEST -DSTATIC_LIB:String=ON ..
 
 
 NUMBER_OF_PROCESSORS=$(nproc --all)

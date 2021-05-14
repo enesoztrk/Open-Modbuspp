@@ -50,12 +50,24 @@ include_directories("${source_dir}/googletest/include"
                     "${source_dir}/googlemock/include")
 
  #target_link_libraries(${PROJECT_NAME} PUBLIC rt)
+ include_directories("${CMAKE_SOURCE_DIR}/Modbuspp/port/posix")
+ include_directories("${CMAKE_SOURCE_DIR}/Modbuspp/inc")
+
+ set(Headers__Mock
+ "${CMAKE_CURRENT_SOURCE_DIR}/mock/posix_socket_mock.h"
+ )
+
+
+
+
+ source_group("Mock" FILES ${Headers__Mock})
+
 
 
 file(GLOB SRCS *.cpp)
 
-ADD_EXECUTABLE(UnitTest ${SRCS})
-
+ADD_EXECUTABLE(UnitTest ${SRCS} ${Headers__Mock})
+add_dependencies(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/Modbuspp/lib/libModbuspp.a)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC
                     ${CMAKE_SOURCE_DIR}/Modbuspp/lib/libModbuspp.a
                     ${binary_dir}/lib/libgtest.a
