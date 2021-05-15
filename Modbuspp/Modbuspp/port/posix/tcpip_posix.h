@@ -116,6 +116,7 @@ public:
     LinuxTcpIPStack& operator=(const LinuxTcpIPStack &other)=delete;
 
 
+
 private:
     /**
      * @brief
@@ -163,7 +164,11 @@ private:
      * @note
      * @warning Warning.
      */
-     LinuxTcpIPStack& operator<<(const std::vector<int8_t>& data_vec);
+    ITcpIp& voperator(const std::vector<int8_t>& data_vec)override
+    {
+            vsend(data_vec);
+            return *this;
+    }
 
     /**
      * @brief
@@ -175,8 +180,10 @@ private:
      * @warning Warning.
      */
 
-    uint32_t vsend(std::vector<int8_t>&)override;
+    uint32_t vsend(const std::vector<int8_t>&) override;
 
+    uint32_t vsend(const std::vector<int8_t>&&) override{
+    }
 
      /**
       * @brief operator>> calls receive function

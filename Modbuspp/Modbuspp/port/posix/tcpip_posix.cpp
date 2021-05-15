@@ -55,6 +55,12 @@ LinuxTcpIPStack::~LinuxTcpIPStack()
  */
 LinuxTcpIPStack::LinuxTcpIPStack(ip_t ip,port_t port):addr{}{
    init_socket(ip,port);
+   if(tcpip_diag.stat==status::TCPIP_SOCKFD_INIT){
+           tcpip_diag.stat=status::TCPIP_INIT_SUCCESS;
+   }
+   else if(tcpip_diag.stat==status::TCPIP_SOCKFD_ERR){
+           tcpip_diag.stat=status::TCPIP_INIT_ERR;
+   }
 }
 
 /**
@@ -73,12 +79,15 @@ LinuxTcpIPStack::LinuxTcpIPStack(ip_t ip,port_t port):addr{}{
     auto ret_val = ::inet_aton(ip_str.c_str(),&addr_temp);
 
 
-    if(0==ret_val){
-        //exception throw
-        }
-    else if(1==ret_val){
-        init_socket(addr_temp.s_addr,port);
 
+     if(0!=ret_val){
+        init_socket(addr_temp.s_addr,port);
+        if(tcpip_diag.stat==status::TCPIP_SOCKFD_INIT){
+                tcpip_diag.stat=status::TCPIP_INIT_SUCCESS;
+        }
+        else if(tcpip_diag.stat==status::TCPIP_SOCKFD_ERR){
+                tcpip_diag.stat=status::TCPIP_INIT_ERR;
+        }
     }
 
 }
@@ -144,7 +153,7 @@ bool LinuxTcpIPStack::vconnect(std::string ip_str,port_t port){
     std::cout<<__PRETTY_FUNCTION__<<"\n";
     bool b_ret_val{false};
 
-    struct pollfd cnxn_pollfd{0};
+    struct pollfd cnxn_pollfd{};
     struct sockaddr_in server_s{};
 
     /*server struct definition*/
@@ -160,9 +169,10 @@ bool LinuxTcpIPStack::vconnect(std::string ip_str,port_t port){
                 std::cout<<"Connected\n";
                 b_ret_val=true;
                 b_is_connection_on=true;
-
+                tcpip_diag.stat=status::TCPIP_CONNECTED;
+                tcpip_diag.err=0;
             }
-
+            else{
             /*it is ok for non-blocking I/O*/
              if ( errno == EINPROGRESS)
               {
@@ -179,6 +189,8 @@ bool LinuxTcpIPStack::vconnect(std::string ip_str,port_t port){
                          std::cout<<"Connected EINPROGRESS\n";
                          b_ret_val=true;
                          b_is_connection_on=true;
+                         tcpip_diag.stat=status::TCPIP_CONNECTED;
+                         tcpip_diag.err=0;
                      }
                      else{
                         tcpip_diag.stat=status::TCPIP_NOT_CONNECTED;
@@ -195,6 +207,7 @@ bool LinuxTcpIPStack::vconnect(std::string ip_str,port_t port){
                  tcpip_diag.err=errno;
 
              }
+            }
 
 
     }
@@ -213,7 +226,7 @@ bool LinuxTcpIPStack::vconnect(std::string ip_str,port_t port){
  * @warning Warning.
  */
 
-uint32_t LinuxTcpIPStack::vsend(std::vector<int8_t>& vec_out_data){
+uint32_t LinuxTcpIPStack::vsend(const std::vector<int8_t>& vec_out_data){
     std::cout<<__PRETTY_FUNCTION__<<"\n";
     ssize_t ss_ret_val{0};
 
@@ -270,17 +283,20 @@ bool LinuxTcpIPStack::vbind(){
 
      set_sockopt(SOL_SOCKET,SO_REUSEADDR);
 
+      if(tcpip_diag.stat==status::TCPIP_SETSOCK_SUCCESS){
 
-     if(0==(::bind(sock_desc, (struct sockaddr *)&addr, sizeof(addr)))){
+
+          if(0==(::bind(sock_desc, (struct sockaddr *)&addr, sizeof(addr)))){
             tcpip_diag.stat=status::TCPIP_BIND_SUCCESS;
             ret_val=true;
-     }
-     else
-     {     tcpip_diag.stat=status::TCPIP_BIND_ERR;
-           tcpip_diag.err=errno;
+            }
+          else
+            {
+            tcpip_diag.stat=status::TCPIP_BIND_ERR;
+            tcpip_diag.err=errno;
 
-     }
-
+            }
+      }
 
          return ret_val;
 
@@ -302,6 +318,7 @@ bool LinuxTcpIPStack::vlisten(const unsigned int max_conn){
 
     if(0==(::listen(sock_desc,max_conn))){
            tcpip_diag.stat=status::TCPIP_LISTEN_SUCCESS;
+           tcpip_diag.err=0;
            ret_val=true;
     }
     else
@@ -335,8 +352,13 @@ sock_fd LinuxTcpIPStack::vaccept(){
 
     if(client_fd==-1)
     {
-       // TODO: tcpip_diag.stat=diag::status::TCPIP_
-            tcpip_diag.err=errno;
+           tcpip_diag.stat=status::TCPIP_ACCEPT_ERR;
+           tcpip_diag.err=errno;
+    }
+    else{
+        tcpip_diag.stat=status::TCPIP_ACCEPT_SUCCESS;
+        tcpip_diag.err=0;
+
     }
     std::cout<<__PRETTY_FUNCTION__<<"\n";
     return client_fd;
@@ -403,7 +425,7 @@ ITcpIp::port_t LinuxTcpIPStack::vgetport()const {
  * @warning Warning.
  */
 ITcpIp::diag LinuxTcpIPStack::vget_status_err()const {
-    return this->tcpip_diag;
+    return ITcpIp::diag{this->tcpip_diag};
 }
 
 
@@ -420,9 +442,10 @@ void LinuxTcpIPStack::init_socket(ip_t ip,port_t port){
 
     addr.sin_port=htons(port);
     addr.sin_family = AF_INET;
-    tcpip_diag.stat=status::TCPIP_INIT;
     addr.sin_addr.s_addr=ip;
     sock_desc=vget_fd();
+
+
 }
 
 /**

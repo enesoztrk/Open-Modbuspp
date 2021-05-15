@@ -1,16 +1,22 @@
-/****************************************************************************
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- ****************************************************************************/
-
+/**
+ * ============================================================================
+ * @file posix_socket_mock.hpp
+ * @author Enes OZTURK
+ * @brief
+ * @date 2021-05-14
+ *
+ * @copyright:  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * ============================================================================
+ */
 #ifndef __POSIX_SOCKET_MOCK_H__
 #define __POSIX_SOCKET_MOCK_H__
 #include<cstdint>
@@ -37,61 +43,21 @@ int inet_aton (const char *__cp, struct in_addr *__inp)__THROW;
 int fcntl (int __fd, int __cmd, ...);
 int close (int __fd);
 
-inline in_addr_t inet_addr (const char *__cp) {
+ in_addr_t inet_addr (const char *__cp)__THROW;
+ int connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
+ int poll (struct pollfd *__fds, nfds_t __nfds, int __timeout);
 
-      std::cout<<"mock inet_addr\n";
-    return 1;
+ ssize_t send (int __fd, const void *__buf, size_t __n, int __flags);
 
-}
-inline int connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len){
-
-    std::cout<<"mock connect\n";
-    return 0;
-
-}
-
-inline int poll (struct pollfd *__fds, nfds_t __nfds, int __timeout){
-    std::cout<<"mock poll\n";
-    return 0;
-}
+ ssize_t recv (int __fd, void *__buf, size_t __n, int __flags);
 
 
-inline ssize_t send (int __fd, const void *__buf, size_t __n, int __flags){
-     std::cout<<"mock send\n";
-    return 1;
-}
+ int bind (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len)__THROW;
 
+ int listen (int __fd, int __n)__THROW;
+ int accept (int __fd, __SOCKADDR_ARG __addr,
+            socklen_t *__restrict __addr_len);
 
-inline ssize_t recv (int __fd, void *__buf, size_t __n, int __flags){
-     std::cout<<"mock receive\n";
-    return 1;
-}
-
-
-inline int bind (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len){
-     std::cout<<"mock bind\n";
-    return 0;
-
-}
-
-inline int listen (int __fd, int __n){
-
-
-    std::cout<<"mock listen\n";
-   return 0;
-
-}
-inline int accept (int __fd, __SOCKADDR_ARG __addr,
-            socklen_t *__restrict __addr_len){
-    std::cout<<"mock accept\n";
-   return 0;
-
-}
-inline int setsockopt (int __fd, int __level, int __optname,
-                const void *__optval, socklen_t __optlen){
-
-    std::cout<<"mock accept\n";
-    return 0;
-
-}
+ int setsockopt (int __fd, int __level, int __optname,
+                const void *__optval, socklen_t __optlen)__THROW;
 #endif //__POSIX_SOCKET_MOCK_H__

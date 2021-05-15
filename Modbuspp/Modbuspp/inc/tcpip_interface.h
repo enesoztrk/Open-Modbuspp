@@ -39,8 +39,8 @@ class ITcpIp{
 public:
     using ip_t=unsigned long;
     using port_t=unsigned short;
-    enum class status{ TCPIP_INIT,
-                       TCPIP_DEINIT,
+    enum class status{ TCPIP_INIT_SUCCESS,
+                       TCPIP_INIT_ERR,
                        TCPIP_SOCKFD_ERR,
                        TCPIP_SOCKFD_INIT,
                        TCPIP_NOT_CONNECTED,
@@ -61,7 +61,7 @@ public:
 
     struct diag{
 
-          status stat{status::TCPIP_DEINIT};
+          status stat{status::TCPIP_INIT_ERR};
           int err{};
      };
 
@@ -87,8 +87,26 @@ public:
      * @note
      * @warning Warning.
      */
-    [[nodiscard]] uint32_t send(std::vector<int8_t>& vec_out_data){
+    [[nodiscard]] uint32_t send(const std::vector<int8_t>& vec_out_data){
             return vsend(vec_out_data);
+    }
+
+    /**
+     * @brief
+     *
+     *
+     * @param none
+     * @return
+     * @note
+     * @warning Warning.
+     */
+    [[nodiscard]] uint32_t send(const std::vector<int8_t>&& vec_out_data){
+            return vsend(vec_out_data);
+    }
+
+
+    ITcpIp& operator<<(const std::vector<int8_t>& data_vec){
+            return voperator(data_vec);
     }
     /**
      * @brief
@@ -204,7 +222,8 @@ private:
 
      virtual int vget_fd()=0;
      virtual bool vconnect(std::string ,port_t )=0;
-     virtual uint32_t vsend(std::vector<int8_t>&)=0;
+     virtual uint32_t vsend(const std::vector<int8_t>&)=0;
+     virtual uint32_t vsend(const std::vector<int8_t>&&)=0;
      virtual bool vreceive()=0;
      virtual bool vbind()=0;
      virtual bool vlisten(const unsigned int max_conn)=0;
@@ -215,7 +234,7 @@ private:
      virtual port_t vgetport()const=0;
      virtual bool vis_cnxn_on()const=0;
      virtual void set_sockopt(int level,int optnum)=0;
-
+     virtual ITcpIp& voperator( const std::vector<int8_t>& data_vec)=0;
 
 
 
